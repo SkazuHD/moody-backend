@@ -6,4 +6,4 @@ COPY . .
 
 RUN poetry install
 
-ENTRYPOINT ["poetry", "run", "start"]
+ENTRYPOINT ["poetry", "run", "fastapi", "run", "moody_backend/"]
