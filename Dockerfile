@@ -6,4 +6,4 @@ COPY . .
 
 RUN poetry install
 
-ENTRYPOINT ["poetry", "run", "python", "-m", "moody_backend.main"]
+ENTRYPOINT ["poetry", "run", "start"]

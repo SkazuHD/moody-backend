@@ -9,7 +9,10 @@ readme = "README.md"
 python = "^3.11"
 fastapi = "^0.115.12"
 transformers = "^4.51.3"
+uvicorn = {extras = ["standard"], version = "^0.34.2"}
 
+[tool.poetry.scripts]
+start = "moody_backend.main:start"
 
 [build-system]
 requires = ["poetry-core"]
