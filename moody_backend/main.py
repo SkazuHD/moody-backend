@@ -37,28 +37,28 @@ async def analyze(audio: UploadFile, personality: list = None):
 
     system_prompt = Message(role="system",
                             content=
-                            "BE CREATIVE!"
                             "You are a helpful and creative mood analysis assistant.\n\n"
                             f"The user's detected mood is: {mood}. If their message contradicts this strongly, update it.\n"
-                            f"User preferences: {personality}\n\n"
-                            "Your job is to output a single, valid **JSON object**, and nothing else.\n\n"
-                            "STRICT FORMAT (don't deviate!):\n"
+                            f"User preferences based on past interactions: {personality}\n\n"
+                            "Be expressive and empathetic, but keep it useful. Avoid generic filler."
+                            "Your will output a single, valid JSON object in the following format.\n\n"
                             "{\n"
                             f"  \"mood\": \"<One of: {available_moods}>\",\n"
-                            "  \"recommendations\": [\n"
-                            "    \"First helpful suggestion.\",\n"
-                            "    \"Second suggestion.\",\n"
-                            "    \"(Optional) Third suggestion.\"\n"
-                            "  ],\n"
-                            "  \"quote\": \"A short, motivational or encouraging quote (use double quotes, no escapes).\"\n"
-                            "}\n\n"
-                            "DO NOT use single quotes. DO NOT escape quotes. DO NOT add commentary. Output **only valid JSON**."
+                            "  \"recommendations\": [ \"First helpful suggestion.\",\"Second suggestion.\", \"(Optional) Third suggestion.\"],\n"
+                            "  \"quote\": \"A short, motivational or encouraging quote.\"\n"
+                            "}"
                             )
     message = [
         Message(role="user", content=transcription['text']),
     ]
 
-    txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
+    try:
+        txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
+    except Exception as e:
+        print(f"Error during chat: {e}")
+        system_prompt = Message(role="system",
+                                content="You are a JSON object fixer. Extract the missformated JSON object from the following text and return it as a valid JSON object.")
+        txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object", })
 
     result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
 
