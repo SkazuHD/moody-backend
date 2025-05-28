@@ -3,6 +3,7 @@ import json
 import dotenv
 
 from moody_backend.GroqClient import GroqClient
+from moody_backend.HfClient import HugginfaceClient
 from moody_backend.models import Message
 
 dotenv.load_dotenv()
@@ -12,8 +13,8 @@ from fastapi import FastAPI, UploadFile
 
 app = FastAPI()
 
-transcriptionClient = GroqClient(dry_run=True)
-moodClient = "NOT IMPLEMENTED"
+transcriptionClient = GroqClient(dry_run=False)
+moodClient = HugginfaceClient()
 txt2txtClient = GroqClient(dry_run=False)
 
 
@@ -25,13 +26,10 @@ async def root():
 @app.post("/analyze")
 async def analyze(audio: UploadFile, personality: list = None):
     transcription = transcriptionClient.transcribe(audio.filename, audio.content_type, audio.file)
-
-    # TODO Mood will be given by voice analysis
-    # Or maybe combined with text analysis if voice does not match the text
-    # mood = moodClient.analyze(audio.filename, audio.content_type, audio.file)
-
-    # TODO use voice analysis to determine mood
-    mood = "Happy"
+    print(transcription)
+    emotions = moodClient.audio_classification(audio)
+    mood = emotions[0]['label']
+    print(emotions)
 
     available_moods = 'Happy|Sad|Calm|Fear|Angry'
 
@@ -49,7 +47,7 @@ async def analyze(audio: UploadFile, personality: list = None):
                             "}"
                             )
     message = [
-        Message(role="user", content=transcription['text']),
+        Message(role="user", content=transcription.to_dict()['text']),
     ]
 
     try:
