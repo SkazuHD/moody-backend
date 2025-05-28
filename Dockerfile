@@ -4,7 +4,7 @@ RUN pip install poetry
 
 COPY . .
 
-RUN sudo apt update && apt install ffmpeg -y
+RUN apt update && apt install ffmpeg -y
 
 RUN poetry install
 
