@@ -14,7 +14,7 @@ app = FastAPI()
 
 transcriptionClient = GroqClient(dry_run=True)
 moodClient = "NOT IMPLEMENTED"
-txt2txtClient = GroqClient(dry_run=True)
+txt2txtClient = GroqClient(dry_run=False)
 
 
 @app.get("/")
@@ -23,16 +23,23 @@ async def root():
 
 
 @app.post("/analyze")
-async def analyze(audio: UploadFile):
+async def analyze(audio: UploadFile, personality: list = None):
     transcription = transcriptionClient.transcribe(audio.filename, audio.content_type, audio.file)
 
     # TODO Mood will be given by voice analysis
     # Or maybe combined with text analysis if voice does not match the text
     # mood = moodClient.analyze(audio.filename, audio.content_type, audio.file)
 
-    # TODO change systempromt
+    # TODO use voice analysis to determine mood
+    mood = "Happy"
+
+    available_moods = 'Happy|Sad|Calm|Fear|Angry'
+
     system_prompt = Message(role="system",
-                            content="BE CREATIVE! You are a mood analysis assistant. You will analyze the mood and just give recommendations based on the mood of the user. Your Output should be in the form of a JSON object with the following keys: 'mood' : 'value', 'recommendations' : ['First', 'Second', 'Third if needed'].")
+                            content="BE CREATIVE! You are a mood analysis assistant. You will analyze the mood and just give recommendations based on the mood of the user. "
+                                    f"Based on previous interactions we know that the user likes or dislikes the following ${personality}"
+                                    f"Based on previous voice analysis the current mood of the user is ${mood} but you should consider if the text contradicts it heavily and adjust accordingly."
+                                    f"Your Output should be in the form of a JSON object with the following keys: 'mood' : ${available_moods}, 'recommendations' : ['First', 'Second', 'Third if needed'].")
 
     message = [
         Message(role="user", content=transcription['text']),

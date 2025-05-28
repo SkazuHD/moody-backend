@@ -30,9 +30,9 @@ class GroqClient:
                         '{\n'
                         '  "mood": "overwhelmed",\n'
                         '  "recommendations": [\n'
-                        '    "Allow yourself to grieve and process your emotions. It\'s okay to not be okay right now.",\n'
-                        '    "Consider taking a walk or doing some light physical activity to release endorphins and calm your mind.",\n'
-                        '    "Reach out to a trusted friend or family member for support and conversation. Talking about your feelings can be incredibly helpful during this difficult time."\n'
+                        '    "Take a deep breath and allow yourself to grieve in your own time."',
+                        '    "Consider reaching out to a trusted friend or family member for support."',
+                        '    "You might also find it helpful to create a memory book or cherished keepsakes related to your dog."'
                         '  ]\n'
                         '}'
                     ), "role": "assistant",
