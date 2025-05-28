@@ -80,7 +80,7 @@ class GroqClient:
             messages.insert(0, system_prompt)
 
         response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=1,
             max_completion_tokens=300,

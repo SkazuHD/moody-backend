@@ -36,11 +36,24 @@ async def analyze(audio: UploadFile, personality: list = None):
     available_moods = 'Happy|Sad|Calm|Fear|Angry'
 
     system_prompt = Message(role="system",
-                            content="BE CREATIVE! You are a mood analysis assistant. You will analyze the mood and just give recommendations based on the mood of the user. "
-                                    f"Based on previous interactions we know that the user likes or dislikes the following ${personality}"
-                                    f"Based on previous voice analysis the current mood of the user is ${mood} but you should consider if the text contradicts it heavily and adjust accordingly."
-                                    f"Your Output should be in the form of a JSON object with the following keys: 'mood' : ${available_moods}, 'recommendations' : ['First', 'Second', 'Third if needed'].")
-
+                            content=
+                            "BE CREATIVE!"
+                            "You are a helpful and creative mood analysis assistant.\n\n"
+                            f"The user's detected mood is: {mood}. If their message contradicts this strongly, update it.\n"
+                            f"User preferences: {personality}\n\n"
+                            "Your job is to output a single, valid **JSON object**, and nothing else.\n\n"
+                            "STRICT FORMAT (don't deviate!):\n"
+                            "{\n"
+                            f"  \"mood\": \"<One of: {available_moods}>\",\n"
+                            "  \"recommendations\": [\n"
+                            "    \"First helpful suggestion.\",\n"
+                            "    \"Second suggestion.\",\n"
+                            "    \"(Optional) Third suggestion.\"\n"
+                            "  ],\n"
+                            "  \"quote\": \"A short, motivational or encouraging quote (use double quotes, no escapes).\"\n"
+                            "}\n\n"
+                            "DO NOT use single quotes. DO NOT escape quotes. DO NOT add commentary. Output **only valid JSON**."
+                            )
     message = [
         Message(role="user", content=transcription['text']),
     ]
