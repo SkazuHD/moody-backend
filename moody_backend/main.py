@@ -1,10 +1,13 @@
 import json
+import time
+from datetime import date, datetime
 
 import dotenv
+from pydantic.config import JsonDict
 
 from moody_backend.GroqClient import GroqClient
-from moody_backend.HfClient import HugginfaceClient
-from moody_backend.models import Message
+from moody_backend.HfClient import HuggingfaceClient
+from moody_backend.models import Message, AnalyzeResponse
 
 dotenv.load_dotenv()
 
@@ -14,16 +17,18 @@ from fastapi import FastAPI, UploadFile
 app = FastAPI()
 
 transcriptionClient = GroqClient(dry_run=False)
-moodClient = HugginfaceClient()
+moodClient = HuggingfaceClient()
 txt2txtClient = GroqClient(dry_run=False)
 
 
-@app.get("/")
+@app.get("/", response_model=dict)
 async def root():
-    return {"message": "Soullog API is Happily working! Are you?"}
+    return {"message": "Soullog API is Happily working! Are you?",
+            "date" : datetime.isoformat(datetime.today())}
 
 
-@app.post("/analyze")
+
+@app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(audio: UploadFile, personality: list = None):
     transcription = transcriptionClient.transcribe(audio.filename, audio.content_type, audio.file)
     print(transcription)
@@ -31,7 +36,7 @@ async def analyze(audio: UploadFile, personality: list = None):
     mood = emotions[0]['label']
     print(emotions)
 
-    available_moods = 'Happy|Sad|Calm|Fear|Angry'
+    available_moods = ["happy","sad","calm","fearful","angry", "disgust", "neutral", "suprised"]
 
     system_prompt = Message(role="system",
                             content=

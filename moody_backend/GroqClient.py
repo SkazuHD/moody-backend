@@ -10,14 +10,20 @@ class MockedChatResponse:
     def to_dict(self):
         return self._data
 
+class MockedTranscriptionResponse:
+    def __init__(self, data):
+        self._data = data
+    def to_dict(self):
+        return self._data
+
 
 class GroqClient:
-    mocked_transcription = {
+    mocked_transcription = MockedTranscriptionResponse({
         "text": "My dog died, i cant do this anymore",
         "x_groq": {
             "id": "req_mocked1234567890"
         }
-    }
+    })
 
     mocked_chat_response = MockedChatResponse({
         "id": "chatcmpl-8efb3e29-17a1-4eff-a8c3-39cdba4c0b88",
