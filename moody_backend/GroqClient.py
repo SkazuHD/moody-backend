@@ -10,9 +10,11 @@ class MockedChatResponse:
     def to_dict(self):
         return self._data
 
+
 class MockedTranscriptionResponse:
     def __init__(self, data):
         self._data = data
+
     def to_dict(self):
         return self._data
 
@@ -86,7 +88,7 @@ class GroqClient:
             messages.insert(0, system_prompt)
 
         response = self.client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.85,
             max_completion_tokens=300,
