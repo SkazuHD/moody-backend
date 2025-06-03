@@ -29,8 +29,10 @@ async def root():
 available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze(audio: UploadFile, personality: Optional[str] = Form(None)):
+@app.post("/analyze", response_model=AnalyzeResponse, operation_id="analyze_audio",
+          summary="Analyze audio diary entry",
+          description="Transcribe audio, detect mood, and update user persona based on the transcript.")
+async def analyze_audio(audio: UploadFile, personality: Optional[str] = Form(None)):
     # 1. Transcribe and detect mood
     transcription = transcriptionClient.transcribe(audio.filename, audio.content_type, audio.file)
     transcript_text = transcription.to_dict()['text']
@@ -91,7 +93,6 @@ async def analyze(audio: UploadFile, personality: Optional[str] = Form(None)):
     if result.get("mood") not in available_moods:
         print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to original detected mood: {detected_mood}")
         result["mood"] = detected_mood
-        result["note"] = "Original mood restored due to invalid LLM mood output."
 
     # 7. Return final result
     result["personality"] = personality or {}
