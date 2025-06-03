@@ -26,55 +26,75 @@ async def root():
             "date": datetime.isoformat(datetime.today())}
 
 
+available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
+
+
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(audio: UploadFile, personality: Optional[str] = Form(None)):
+    # 1. Transcribe and detect mood
     transcription = transcriptionClient.transcribe(audio.filename, audio.content_type, audio.file)
+    transcript_text = transcription.to_dict()['text']
     emotions = moodClient.audio_classification(audio)
-    mood = emotions[0]['label']
+    detected_mood = emotions[0]['label']
 
-    personality = update_persona(personality, transcription.to_dict()['text'], mood)
+    # 2. Update persona based on transcript and mood
+    personality = update_persona(personality, transcript_text, detected_mood)
 
-    if True:
-        print(f"Transcription: {transcription.to_dict()['text']}")
-        print(f"Detected mood: {mood}")
-        print(f"Personality: {personality}")
+    # 3. Print debug info
+    print(f"Transcription: {transcript_text}")
+    print(f"Detected mood: {detected_mood}")
+    print(f"Personality: {personality}")
 
-    available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
-
+    # 4. Build system prompt
     system_prompt = Message(
         role="system",
         content=(
             "You are a helpful and creative mood analysis assistant.\n\n"
-            f"The detected mood for the current entry is: '{mood}'.\n"
-            f"Based on the user's message and persona, update the mood ONLY if there is a strong contradiction.\n"
-            f"Allowed moods are exactly: {available_moods}.\n"
-            "DO NOT hallucinate or invent moods outside this list.\n"
-            "If uncertain, keep the original mood.\n\n"
-            f"User persona based on past interactions:\n{personality}\n\n"
-            "Be expressive and empathetic, but keep it useful. Avoid generic filler.\n"
-            "Your response MUST be a single valid JSON object exactly in this format:\n\n"
+            f"## Detected mood: '{detected_mood}'\n"
+            "- Only update the mood if the user’s transcript strongly contradicts it.\n"
+            f"- Allowed moods: {available_moods}\n"
+            "- DO NOT invent or guess moods outside this list.\n"
+            "- If unsure, keep the original mood.\n\n"
+            "## User persona:\n"
+            f"{json.dumps(personality, indent=2)}\n\n"
+            "## Output format:\n"
+            "Respond ONLY with a single valid JSON object in this format:\n"
             "{\n"
             "  \"mood\": \"<one of the allowed moods>\",\n"
             "  \"recommendations\": [\"First helpful suggestion.\", \"Second suggestion.\", \"(Optional) Third suggestion.\"],\n"
             "  \"quote\": \"A short, motivational or encouraging quote.\"\n"
-            "}"
+            "}\n\n"
+            "## Tone:\n"
+            "- Be expressive and empathetic.\n"
+            "- Keep it useful. Avoid generic filler like 'you got this!'."
+            "- Use informal language (\"you\" instead of \"the user\"). Be personal, direct, warm and approachable.."
+            "- Recommendations should be clear, actionable, and not phrased as a conversation. Avoid \"let's\" or asking questions."
         )
     )
-    message = [
-        Message(role="user", content=transcription.to_dict()['text']),
-    ]
-    print(system_prompt)
+
+    # 5. Get LLM response
+    message = [Message(role="user", content=transcript_text)]
     try:
         txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
+        result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
     except Exception as e:
         print(f"Error during chat: {e}")
-        system_prompt = Message(role="system",
-                                content="You are a JSON object fixer. Extract the missformated JSON object from the following text and return it as a valid JSON object.")
-        txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object", })
+        # Fallback fixer
+        system_prompt = Message(
+            role="system",
+            content="You are a JSON object fixer. Extract the malformed JSON object from the following text and return it as a valid JSON object."
+        )
+        txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
+        result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
 
-    result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
+    # 6. Validate and patch hallucinated mood if necessary
+    if result.get("mood") not in available_moods:
+        print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to original detected mood: {detected_mood}")
+        result["mood"] = detected_mood
+        result["note"] = "Original mood restored due to invalid LLM mood output."
 
-    result["personality"] = personality if personality is not None else {}
+    # 7. Return final result
+    result["personality"] = personality or {}
     return result
 
 
