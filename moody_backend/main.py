@@ -96,6 +96,7 @@ async def analyze_audio(audio: UploadFile, personality: Optional[str] = Form(Non
 
     # 7. Return final result
     result["personality"] = personality or {}
+    result["transcription"] = transcript_text
     return result
 
 
