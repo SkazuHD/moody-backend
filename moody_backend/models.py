@@ -26,7 +26,7 @@ class Persona(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    mood: Literal["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
+    mood: Literal["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "surprised"]
     transcription: str = Field(..., description="Transcription of the diary entry.")
     recommendations: list
     quote: constr(min_length=1)

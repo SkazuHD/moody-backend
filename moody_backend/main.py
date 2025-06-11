@@ -26,7 +26,7 @@ async def root():
             "date": datetime.isoformat(datetime.today())}
 
 
-available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
+available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "surprised"]
 
 
 @app.post("/emoji_checkin", response_model=AnalyzeResponse, operation_id="emoji_checkin",
