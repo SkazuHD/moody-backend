@@ -32,7 +32,7 @@ available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutr
 @app.post("/emoji_checkin", response_model=AnalyzeResponse, operation_id="emoji_checkin",
           summary="Emoji mood check-in",
           description="Generate recommendations and a quote based on selected mood.")
-async def emoji_checkin(mood: str = Body(...), personality: Optional[str] = None):
+async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form(None)):
     if mood not in available_moods:
         return {"error": f"Invalid mood: {mood}. Must be one of {available_moods}"}
 
