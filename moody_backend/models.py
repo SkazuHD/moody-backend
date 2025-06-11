@@ -28,6 +28,7 @@ class Persona(BaseModel):
 class AnalyzeResponse(BaseModel):
     mood: Literal["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "surprised"]
     transcription: str = Field(..., description="Transcription of the diary entry.")
-    recommendations: list
-    quote: constr(min_length=1)
-    personality: Persona = Field()
+    recommendations: List[str] = Field(..., description="Suggestions for improving mood or well-being.")
+    quote: constr(min_length=1) = Field(..., description="A random quote related to the mood.")
+    personality: Persona = Field(...,
+                                 description="Updated Personality traits and insights derived from the diary entry.")
