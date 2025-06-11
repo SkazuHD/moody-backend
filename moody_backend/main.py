@@ -44,26 +44,28 @@ async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form
         role="system",
         content=(
             "You are a helpful and creative mood analysis assistant.\n\n"
-            f"## Selected mood: '{mood}'\n"
-            f"- Allowed moods: {available_moods}\n\n"
+            f"- Allowed moods: {available_moods}\n"
+            "- DO NOT invent or guess moods outside this list.\n"
+            "- If unsure, keep the original mood.\n\n"
             "## User persona:\n"
             f"{json.dumps(personality, indent=2)}\n\n"
             "## Output format:\n"
+            "Respond ONLY with a single valid JSON object in this format:\n"
             "{\n"
             "  \"mood\": \"<one of the allowed moods>\",\n"
-            "  \"recommendations\": [\"...\", \"...\"],\n"
-            "  \"quote\": \"...\"\n"
+            "  \"recommendations\": [\"First helpful suggestion.\", \"Second suggestion.\", \"(Optional) Third suggestion.\"],\n"
+            "  \"quote\": \"A short, motivational or encouraging quote.\"\n"
             "}\n\n"
             "## Tone:\n"
             "- Be expressive and empathetic.\n"
-            "- Use informal language (\"you\" instead of \"the user\").\n"
-            "- Recommendations should be clear and actionable.\n"
-            "- Avoid generic fluff like 'you got this!'."
+            "- Keep it useful. Avoid generic filler like 'you got this!'."
+            "- Use informal language (\"you\" instead of \"the user\"). Be personal, direct, warm and approachable.."
+            "- Recommendations should be clear, actionable, and not phrased as a conversation. Avoid \"let's\" or asking questions."
         )
     )
 
     # LLM
-    message = [Message(role="user", content="")]
+    message = [Message(role="user", content=mood)]
     try:
         txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
         result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
