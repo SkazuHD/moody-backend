@@ -29,6 +29,64 @@ async def root():
 available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
 
 
+@app.post("/emoji_checkin", response_model=AnalyzeResponse, operation_id="emoji_checkin",
+          summary="Emoji mood check-in",
+          description="Generate recommendations and a quote based on selected mood.")
+async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form(None)):
+    if mood not in available_moods:
+        return {"error": f"Invalid mood: {mood}. Must be one of {available_moods}"}
+
+    # Update persona based (empty Transcript)
+    personality = update_persona(personality, "", mood)
+
+    # Build system prompt
+    system_prompt = Message(
+        role="system",
+        content=(
+            "You are a helpful and creative mood analysis assistant.\n\n"
+            f"- Allowed moods: {available_moods}\n"
+            "- DO NOT invent or guess moods outside this list.\n"
+            "- If unsure, keep the original mood.\n\n"
+            "## User persona:\n"
+            f"{json.dumps(personality, indent=2)}\n\n"
+            "## Output format:\n"
+            "Respond ONLY with a single valid JSON object in this format:\n"
+            "{\n"
+            "  \"mood\": \"<one of the allowed moods>\",\n"
+            "  \"recommendations\": [\"First helpful suggestion.\", \"Second suggestion.\", \"(Optional) Third suggestion.\"],\n"
+            "  \"quote\": \"A short, motivational or encouraging quote.\"\n"
+            "}\n\n"
+            "## Tone:\n"
+            "- Be expressive and empathetic.\n"
+            "- Keep it useful. Avoid generic filler like 'you got this!'."
+            "- Use informal language (\"you\" instead of \"the user\"). Be personal, direct, warm and approachable.."
+            "- Recommendations should be clear, actionable, and not phrased as a conversation. Avoid \"let's\" or asking questions."
+        )
+    )
+
+    # LLM
+    message = [Message(role="user", content=mood)]
+    try:
+        txt = txt2txtClient.chat(message, system_prompt, {"type": "json_object"})
+        result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
+    except Exception as e:
+        print(f"Error during chat: {e}")
+        fallback_prompt = Message(
+            role="system",
+            content="You are a JSON object fixer. Extract the malformed JSON object from the following text and return it as a valid JSON object."
+        )
+        txt = txt2txtClient.chat(message, fallback_prompt, {"type": "json_object"})
+        result = json.loads(txt.to_dict()["choices"][0]["message"]["content"])
+
+    # Check mood
+    if result.get("mood") not in available_moods:
+        print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to input mood: {mood}")
+        result["mood"] = mood
+
+    result["personality"] = personality or {}
+    return result
+
+
 @app.post("/analyze", response_model=AnalyzeResponse, operation_id="analyze_audio",
           summary="Analyze audio diary entry",
           description="Transcribe audio, detect mood, and update user persona based on the transcript.")
