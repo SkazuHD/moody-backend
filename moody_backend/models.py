@@ -34,6 +34,6 @@ class AnalyzeResponse(BaseModel):
                                  description="Updated Personality traits and insights derived from the diary entry.")
 
 class AnalyzeResponseFastCheckin(BaseModel):
-    mood: Literal["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "suprised"]
+    mood: Literal["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "surprised"]
     recommendations: List[str] = Field(..., description="Suggestions for improving mood or well-being.")
     quote: constr(min_length=1) = Field(..., description="A random quote related to the mood.")
