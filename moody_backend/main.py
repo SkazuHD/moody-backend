@@ -6,7 +6,7 @@ import dotenv
 
 from moody_backend.GroqClient import GroqClient
 from moody_backend.HfClient import HuggingfaceClient
-from moody_backend.models import Message, AnalyzeResponse
+from moody_backend.models import Message, AnalyzeResponse, AnalyzeResponseFastCheckin
 
 dotenv.load_dotenv()
 
@@ -29,15 +29,12 @@ async def root():
 available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutral", "surprised"]
 
 
-@app.post("/emoji_checkin", response_model=AnalyzeResponse, operation_id="emoji_checkin",
+@app.post("/emoji_checkin", response_model=AnalyzeResponseFastCheckin, operation_id="emoji_checkin",
           summary="Emoji mood check-in",
           description="Generate recommendations and a quote based on selected mood.")
-async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form(None)):
+async def emoji_checkin(mood: str = Form(...)):
     if mood not in available_moods:
         return {"error": f"Invalid mood: {mood}. Must be one of {available_moods}"}
-
-    # Update persona based (empty Transcript)
-    personality = update_persona(personality, "", mood)
 
     # Build system prompt
     system_prompt = Message(
@@ -47,8 +44,6 @@ async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form
             f"- Allowed moods: {available_moods}\n"
             "- DO NOT invent or guess moods outside this list.\n"
             "- If unsure, keep the original mood.\n\n"
-            "## User persona:\n"
-            f"{json.dumps(personality, indent=2)}\n\n"
             "## Output format:\n"
             "Respond ONLY with a single valid JSON object in this format:\n"
             "{\n"
@@ -83,7 +78,6 @@ async def emoji_checkin(mood: str = Form(...), personality: Optional[str] = Form
         print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to input mood: {mood}")
         result["mood"] = mood
 
-    result["personality"] = personality or {}
     return result
 
 
