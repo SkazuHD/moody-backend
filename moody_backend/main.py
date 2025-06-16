@@ -78,7 +78,7 @@ async def emoji_checkin(mood: str = Form(...)):
         print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to input mood: {mood}")
         result["mood"] = mood
 
-    result["mood"] = mood.lower()
+    result["mood"] = result["mood"].lower()
 
     return result
 
