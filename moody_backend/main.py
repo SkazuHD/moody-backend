@@ -33,6 +33,7 @@ available_moods = ["happy", "sad", "calm", "fearful", "angry", "disgust", "neutr
           summary="Emoji mood check-in",
           description="Generate recommendations and a quote based on selected mood.")
 async def emoji_checkin(mood: str = Form(...)):
+    mood = mood.lower().strip()
     if mood not in available_moods:
         return {"error": f"Invalid mood: {mood}. Must be one of {available_moods}"}
 
@@ -77,8 +78,6 @@ async def emoji_checkin(mood: str = Form(...)):
     if result.get("mood") not in available_moods:
         print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to input mood: {mood}")
         result["mood"] = mood
-
-    result["mood"] = result["mood"].lower()
 
     return result
 
