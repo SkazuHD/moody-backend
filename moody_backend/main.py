@@ -78,6 +78,8 @@ async def emoji_checkin(mood: str = Form(...)):
         print(f"Invalid mood '{result.get('mood')}' from LLM. Reverting to input mood: {mood}")
         result["mood"] = mood
 
+    result["mood"] = mood.lower()
+
     return result
 
 
@@ -149,6 +151,7 @@ async def analyze_audio(audio: UploadFile, personality: Optional[str] = Form(Non
     # 7. Return final result
     result["personality"] = personality or {}
     result["transcription"] = transcript_text
+
     return result
 
 
